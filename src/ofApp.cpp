@@ -7,13 +7,15 @@ void ofApp::setup(){
 	
 	camWidth 		= 640;	// try to grab at this size. 
 	camHeight 		= 480;
+    
+    frameWidth = camWidth;
 	
 	vidGrabber.setVerbose(true);
-	vidGrabber.setup(camWidth,camHeight);
+	vidGrabber.setup(camWidth, camHeight);
 	
     ofEnableAlphaBlending();
     
-    videoRow.assign(512, 0.0);
+    videoRow.assign(frameWidth, 0.0);
     soundStream.printDeviceList();
     
     //if you want to set the device id to be different than the default
@@ -21,7 +23,7 @@ void ofApp::setup(){
     
     soundStream.setup(this, 2, 0, 44100, 512, 4);
     
-    frameWidth = 512;
+    
     lineSkipFactor = 2;
     lastRemainder = 0;
 }
@@ -43,15 +45,15 @@ void ofApp::draw(){
 	ofPixelsRef pixelsRef = vidGrabber.getPixels();
     
     ofSetColor(255, 0, 255);
-    ofDrawLine(320 - frameWidth / 2, line, 320 + frameWidth / 2, line);
+    ofDrawLine(camWidth / 2 - frameWidth / 2, line, camWidth / 2 + frameWidth / 2, line);
 
-    for (int i = 0; i < 512; i += 1) {
+    for (int i = 0; i < camWidth; i += 1) {
         float lightness = pixelsRef.getColor(i, line).getLightness();
         videoRow[i] = lightness;
     }
     
     line += lineSkipFactor;
-    line %= 480;
+    line %= camHeight;
 }
 
 //--------------------------------------------------------------
@@ -59,7 +61,7 @@ void ofApp::audioOut(float * output, int bufferSize, int nChannels){
     int i;
     for (i = 0; i < bufferSize; i++){
         int x = (lastRemainder + i) % frameWidth;
-        int audioI = 320 - frameWidth / 2 + x;
+        int audioI = camWidth / 2 - frameWidth / 2 + x;
         output[i*nChannels] = videoRow[audioI];
         output[i*nChannels+1] = videoRow[audioI];
     }
@@ -90,7 +92,7 @@ void ofApp::keyReleased(int key){
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y ){
-    frameWidth = abs(320 - x) + 1;
+    frameWidth = abs(camWidth - x) + 1;
     lineSkipFactor = y / 4;
 }
 
